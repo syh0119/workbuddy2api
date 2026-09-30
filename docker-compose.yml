@@ -1,0 +1,12 @@
+services:
+  workbuddy2api:
+    build: .
+    image: workbuddy2api:latest
+    container_name: workbuddy2api
+    restart: unless-stopped
+    # 凭证从 .env 注入（CODEBUDDY_AUTH_TOKEN / CODEBUDDY_REFRESH_TOKEN / API_KEY ...）
+    env_file:
+      - .env
+    ports:
+      # 宿主机端口:容器端口。CasaOS 上如需换端口改左侧数字
+      - "8000:8080"

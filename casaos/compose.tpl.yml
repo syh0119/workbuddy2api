@@ -1,0 +1,68 @@
+name: workbuddy2api
+
+services:
+  workbuddy2api:
+    image: python:3.11-slim
+    container_name: workbuddy2api
+    restart: unless-stopped
+    working_dir: /app
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        pip install --no-cache-dir -q -i https://pypi.tuna.tsinghua.edu.cn/simple fastapi uvicorn || pip install --no-cache-dir -q fastapi uvicorn
+        python - <<'PY'
+        import base64, io, os, tarfile
+        raw = base64.b64decode(os.environ["WB_PAYLOAD"])
+        with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as t:
+            t.extractall("/app")
+        print("extracted:", sorted(os.listdir("/app")))
+        PY
+        exec python -m uvicorn server:app --host 0.0.0.0 --port 8080
+    environment:
+      WB_PAYLOAD: "__PAYLOAD__"
+      TZ: "Asia/Shanghai"
+      ADMIN_DB: "/data/admin.db"
+      ADMIN_PASSWORD: "__ADMIN_PASSWORD__"
+      ADMIN_CREDIT_REFRESH_SEC: "__ADMIN_CREDIT_REFRESH_SEC__"
+      CODEBUDDY_BILLING_BASE: "__BILLING_BASE__"
+      CODEBUDDY_TOKEN_CACHE: "/data/token.json"
+      CODEBUDDY_AUTH_TOKEN: "__AUTH_TOKEN__"
+      CODEBUDDY_REFRESH_TOKEN: "__REFRESH_TOKEN__"
+      CODEBUDDY_USER_ID: "__USER_ID__"
+      CODEBUDDY_DOMAIN: "__DOMAIN__"
+      CODEBUDDY_API_BASE: "__API_BASE__"
+      CODEBUDDY_EXPIRES_AT: "__EXPIRES_AT__"
+      CODEBUDDY_REFRESH_EXPIRES_AT: "__REFRESH_EXPIRES_AT__"
+      API_KEY: "__API_KEY__"
+      DEFAULT_MODEL: "__DEFAULT_MODEL__"
+      DEFAULT_THINKING: "__DEFAULT_THINKING__"
+    ports:
+      - "__PORT__:8080"
+    volumes:
+      - /DATA/AppData/workbuddy2api:/data
+
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: workbuddy2api
+  author: Tom6814
+  category: Utilities
+  description:
+    en_us: OpenAI-compatible REST API in front of WorkBuddy models.
+    zh_cn: 把 WorkBuddy 内置模型包装成 OpenAI 兼容 API。
+  developer: Tom6814
+  icon: https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/OpenWebUI/icon.png
+  index: /
+  is_uncontrolled: true
+  port_map: "__PORT__"
+  scheme: http
+  store_app_id: workbuddy2api
+  tagline:
+    en_us: WorkBuddy to OpenAI-compatible API
+    zh_cn: WorkBuddy 转 OpenAI 兼容 API
+  title:
+    en_us: WorkBuddy2API
+    zh_cn: WorkBuddy2API

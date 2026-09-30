@@ -1,0 +1,34 @@
+# Secrets — never commit real tokens
+tokens.json
+local_tokens.json
+.env
+_bundle/
+
+# Deploy bundles (contain .env)
+*.tar.gz
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# OS
+.DS_Store
+_tmp/
+rendered.yml
+casaos-compose.yml
+*.b64
+server.log
+casaos/casaos.env
+.build/
+
+# 控制面板数据库（含分发给别人的密钥与调用日志，绝不提交）
+admin.db
+admin.db-wal
+admin.db-shm
+*.db

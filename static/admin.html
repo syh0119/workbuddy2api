@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WorkBuddy2API 控制台</title>
+<style>
+:root{
+  --bg:#0d1117; --bg2:#161b22; --bg3:#1c2430; --line:#2a3441;
+  --fg:#e6edf3; --dim:#8b98a5; --accent:#4c9aff; --ok:#3fb950; --warn:#d29922; --err:#f85149;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+a{color:var(--accent)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--bg3);color:var(--fg);
+  padding:7px 13px;border-radius:8px;transition:.15s}
+button:hover{border-color:var(--accent);color:#fff}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.12)}
+button.danger{border-color:#5a2a2a;color:#ff9d95}
+button.danger:hover{background:#3a1d1d;border-color:var(--err)}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{font:inherit;background:var(--bg);border:1px solid var(--line);color:var(--fg);
+  padding:7px 10px;border-radius:8px;width:100%}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+label{display:block;font-size:12px;color:var(--dim);margin:0 0 5px}
+.wrap{max-width:1180px;margin:0 auto;padding:20px}
+.hidden{display:none !important}
+
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:0 0 16px;border-bottom:1px solid var(--line);margin-bottom:20px}
+header h1{font-size:17px;margin:0;font-weight:600}
+header .sp{flex:1}
+.tag{font-size:12px;color:var(--dim);background:var(--bg2);border:1px solid var(--line);padding:3px 9px;border-radius:20px}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.card .k{font-size:12px;color:var(--dim);margin-bottom:6px}
+.card .v{font-size:23px;font-weight:600;letter-spacing:.3px}
+.card .s{font-size:12px;color:var(--dim);margin-top:4px}
+.v.ok{color:var(--ok)} .v.warn{color:var(--warn)} .v.err{color:var(--err)}
+
+.panel{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:18px}
+.panel h2{font-size:14px;margin:0 0 14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.panel h2 .sp{flex:1}
+
+.bar{height:9px;background:var(--bg);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,#3fb950,#4c9aff);border-radius:99px}
+.bar.warn>i{background:linear-gradient(90deg,#d29922,#f85149)}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--dim);font-weight:500;font-size:12px;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.mono,.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.nowrap{white-space:nowrap}
+.scroll{overflow-x:auto}
+
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tabs button{border-radius:20px;padding:6px 15px}
+.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));align-items:end}
+.msg{padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:12px}
+.msg.ok{background:#12291a;border:1px solid #1f5130;color:#7ee2a8}
+.msg.err{background:#2d1618;border:1px solid #5a2a2a;color:#ff9d95}
+.pill{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--line);color:var(--dim)}
+.pill.on{color:var(--ok);border-color:#1f5130;background:#12291a}
+.pill.off{color:var(--err);border-color:#5a2a2a;background:#2d1618}
+.pill.over{color:var(--warn);border-color:#5c4a1a;background:#2b2410}
+.chart{width:100%;height:150px;display:block}
+.empty{color:var(--dim);text-align:center;padding:26px 0;font-size:13px}
+.copy{cursor:pointer;border-bottom:1px dashed var(--dim)}
+.login{max-width:380px;margin:12vh auto}
+.keybox{background:var(--bg);border:1px solid var(--ok);border-radius:8px;padding:12px;margin:10px 0;
+  font-family:ui-monospace,Consolas,monospace;font-size:13px;word-break:break-all}
+small.hint{color:var(--dim);font-size:12px;display:block;margin-top:6px}
+</style>
+</head>
+<body>
+
+<div id="login" class="login">
+  <div class="panel">
+    <h2>WorkBuddy2API 控制台</h2>
+    <div id="loginMsg"></div>
+    <label>管理密码</label>
+    <input id="pwd" type="password" placeholder="ADMIN_PASSWORD" autocomplete="current-password" />
+    <small class="hint">密码在服务端 .env 的 <code>ADMIN_PASSWORD</code></small>
+    <div style="margin-top:14px"><button class="primary" style="width:100%" onclick="doLogin()">登录</button></div>
+  </div>
+</div>
+
+<div id="app" class="wrap hidden">
+  <header>
+    <h1>WorkBuddy2API 控制台</h1>
+    <span class="tag" id="tagUpstream">—</span>
+    <span class="tag" id="tagPlan">—</span>
+    <span class="sp"></span>
+    <span class="tag" id="tagTime">—</span>
+    <button onclick="refreshCredits()">刷新积分</button>
+    <button onclick="logout()">退出</button>
+  </header>
+
+  <div id="msg"></div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="panel">
+    <h2>积分余额 <span class="sp"></span><small id="creditErr" style="color:var(--warn)"></small></h2>
+    <div class="bar" id="creditBar"><i style="width:0%"></i></div>
+    <div style="display:flex;justify-content:space-between;color:var(--dim);font-size:12px;margin-top:6px">
+      <span id="creditLeft">—</span><span id="creditRight">—</span>
+    </div>
+    <div id="packages" style="margin-top:14px"></div>
+  </div>
+
+  <div class="tabs">
+    <button class="on" data-tab="keys" onclick="tab('keys')">API 密钥</button>
+    <button data-tab="usage" onclick="tab('usage')">用量统计</button>
+    <button data-tab="logs" onclick="tab('logs')">请求日志</button>
+  </div>
+
+  <div id="tab-keys">
+    <div class="panel">
+      <h2>新建分发密钥</h2>
+      <div class="row">
+        <div><label>名称</label><input id="kName" placeholder="例如：小李的客户端" /></div>
+        <div><label>额度类型</label>
+          <select id="kType" onchange="syncQuotaHint()">
+            <option value="none">不限</option>
+            <option value="requests">按次数</option>
+            <option value="credits">按积分</option>
+            <option value="tokens">按 tokens</option>
+          </select>
+        </div>
+        <div><label id="kLimitLabel">额度值</label><input id="kLimit" type="number" min="0" step="0.01" placeholder="0" /></div>
+        <div><label>有效期（天，留空=永久）</label><input id="kDays" type="number" min="1" placeholder="" /></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px;align-items:end">
+        <div style="flex:1"><label>备注</label><input id="kNote" placeholder="可选" /></div>
+        <button class="primary" onclick="createKey()">创建密钥</button>
+      </div>
+      <div id="newKeyBox"></div>
+    </div>
+
+    <div class="panel">
+      <h2>密钥列表 <span class="sp"></span><small style="color:var(--dim)" id="keyCount"></small></h2>
+      <div class="scroll"><table id="keysTable"><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="tab-usage" class="hidden">
+    <div class="panel">
+      <h2>每日用量 <span class="sp"></span>
+        <select id="usageDays" style="width:auto" onchange="loadUsage()">
+          <option value="7">近 7 天</option><option value="14">近 14 天</option>
+          <option value="30">近 30 天</option><option value="90">近 90 天</option>
+        </select>
+      </h2>
+      <svg class="chart" id="chart"></svg>
+      <div class="scroll" style="margin-top:10px"><table id="dayTable"><tbody></tbody></table></div>
+    </div>
+    <div class="panel"><h2>按密钥</h2><div class="scroll"><table id="keyUsageTable"><tbody></tbody></table></div></div>
+    <div class="panel"><h2>按模型</h2><div class="scroll"><table id="modelTable"><tbody></tbody></table></div></div>
+  </div>
+
+  <div id="tab-logs" class="hidden">
+    <div class="panel">
+      <h2>最近请求 <span class="sp"></span>
+        <button onclick="loadLogs()">刷新</button>
+        <button class="danger" onclick="cleanupLogs()">清理 90 天前</button>
+      </h2>
+      <div class="scroll"><table id="logTable"><tbody></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let TOKEN = sessionStorage.getItem('wb_admin_token') || '';
+let OVERVIEW = null;
+
+function api(path, opts = {}) {
+  opts.headers = Object.assign({'Content-Type': 'application/json', 'X-Admin-Token': TOKEN}, opts.headers || {});
+  return fetch(path, opts).then(async r => {
+    const txt = await r.text();
+    let data = {}; try { data = txt ? JSON.parse(txt) : {}; } catch (e) { data = {detail: txt}; }
+    if (r.status === 401) { showLogin(); throw new Error(data.detail || '未登录'); }
+    if (!r.ok) throw new Error(data.detail || ('HTTP ' + r.status));
+    return data;
+  });
+}
+function msg(text, kind = 'ok') {
+  const el = $('#msg');
+  el.innerHTML = text ? `<div class="msg ${kind}">${text}</div>` : '';
+  if (text) setTimeout(() => { if (el.innerHTML.includes(text)) el.innerHTML = ''; }, 6000);
+}
+function fmt(n, d = 2) { return (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toLocaleString('zh-CN', {maximumFractionDigits: d}); }
+function ts(t) { return t ? new Date(t * 1000).toLocaleString('zh-CN', {hour12: false}) : '—'; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function showLogin() { TOKEN = ''; sessionStorage.removeItem('wb_admin_token'); $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); }
+function showApp() { $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); }
+
+async function doLogin() {
+  const pwd = $('#pwd').value;
+  $('#loginMsg').innerHTML = '';
+  try {
+    const r = await fetch('/admin/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password: pwd})});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || '登录失败');
+    TOKEN = d.token; sessionStorage.setItem('wb_admin_token', TOKEN);
+    showApp(); boot();
+  } catch (e) { $('#loginMsg').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+}
+function logout() { api('/admin/api/logout', {method:'POST'}).catch(()=>{}); showLogin(); }
+
+function tab(name) {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  ['keys','usage','logs'].forEach(t => $('#tab-' + t).classList.toggle('hidden', t !== name));
+  if (name === 'usage') loadUsage();
+  if (name === 'logs') loadLogs();
+}
+
+async function boot() {
+  await loadOverview();
+  await loadKeys();
+  $('#tagTime').textContent = new Date().toLocaleString('zh-CN', {hour12:false});
+}
+
+async function loadOverview(force = false) {
+  try {
+    const d = await api('/admin/api/overview' + (force ? '?force=1' : ''));
+    OVERVIEW = d;
+    const c = d.credits, s = d.stats;
+    $('#tagUpstream').textContent = d.upstream.api_base.replace('https://', '');
+    $('#tagPlan').textContent = c ? (c.plan || '未知套餐') + (c.paid ? ' · 付费' : ' · 免费') : '积分未知';
+    $('#creditErr').textContent = d.credits_error ? '（' + d.credits_error + '）' : '';
+
+    const remain = c ? c.remain : NaN, total = c ? c.total : NaN, used = c ? c.used : NaN;
+    const pct = (c && total > 0) ? Math.max(0, Math.min(100, remain / total * 100)) : 0;
+    $('#creditBar').querySelector('i').style.width = pct + '%';
+    $('#creditBar').classList.toggle('warn', pct < 20);
+    $('#creditLeft').textContent = c ? `剩余 ${fmt(remain)} / 总计 ${fmt(total)} credits` : '—';
+    $('#creditRight').textContent = c ? `已用 ${fmt(used)} · 剩余 ${pct.toFixed(1)}%` : '—';
+
+    $('#packages').innerHTML = (c && c.packages.length) ? `<table><thead><tr><th>资源包</th><th>总量</th><th>已用</th><th>剩余</th><th style="width:32%">使用率</th></tr></thead><tbody>` +
+      c.packages.map(p => {
+        const r = p.total > 0 ? (1 - p.remain / p.total) * 100 : 0;
+        return `<tr><td class="mono">${esc(p.code)}</td><td>${fmt(p.total)}</td><td>${fmt(p.used)}</td><td>${fmt(p.remain)}</td>
+        <td><div class="bar${r > 80 ? ' warn' : ''}"><i style="width:${Math.min(100, r).toFixed(1)}%"></i></div></td></tr>`;
+      }).join('') + '</tbody></table>' : '';
+
+    const todayCredits = s.today_credits;
+    $('#cards').innerHTML = [
+      card('剩余积分', c ? fmt(remain) : '—', c ? `${pct.toFixed(1)}% 可用 · ${c.plan || ''}` : '', remain < 100 ? 'warn' : 'ok'),
+      card('总积分', c ? fmt(total) : '—', c ? `已用 ${fmt(used)}` : ''),
+      card('今日消耗', fmt(todayCredits, 4), 'credits（按请求累计）', todayCredits > 0 ? 'warn' : ''),
+      card('今日请求', fmt(s.today_requests, 0), `${fmt(s.today_tokens, 0)} tokens`),
+      card('密钥数', `${s.keys_active}/${s.keys}`, '启用 / 总数'),
+      card('累计日志', fmt(s.logs, 0), '条请求记录'),
+    ].join('');
+  } catch (e) { msg('读取概览失败：' + e.message, 'err'); }
+}
+function card(k, v, s, cls = '') {
+  return `<div class="card"><div class="k">${k}</div><div class="v ${cls}">${v}</div><div class="s">${s || ''}</div></div>`;
+}
+function refreshCredits() { msg('正在刷新积分…'); loadOverview(true).then(() => { msg('积分已更新'); loadKeys(); }); }
+
+function syncQuotaHint() {
+  const t = $('#kType').value;
+  $('#kLimitLabel').textContent = t === 'none' ? '额度值（不限则忽略）' :
+    t === 'requests' ? '可调用次数' : t === 'credits' ? '可用积分' : '可用 tokens';
+}
+
+async function loadKeys() {
+  try {
+    const d = await api('/admin/api/keys');
+    const ks = d.keys;
+    $('#keyCount').textContent = `共 ${ks.length} 个`;
+    const rows = ks.map(k => {
+      const qt = {none:'不限', requests:'次数', credits:'积分', tokens:'tokens'}[k.quota_type] || k.quota_type;
+      const limit = k.quota_type === 'none' || !k.quota_limit ? '—' : fmt(k.quota_limit);
+      const used = k.quota_type === 'none' ? '—' : fmt(k.quota_used, 4);
+      const remain = (k.quota_type === 'none' || !k.quota_limit) ? '—' : fmt(Math.max(0, k.quota_limit - k.quota_used), 4);
+      const over = k.quota_type !== 'none' && k.quota_limit > 0 && k.quota_used >= k.quota_limit;
+      const exp = !k.expires_at ? '永久' : (k.expires_at * 1000 < Date.now() ? '<span class="pill off">已过期</span>' : ts(k.expires_at));
+      const state = !k.enabled ? '<span class="pill off">已禁用</span>' : over ? '<span class="pill over">额度已满</span>' : '<span class="pill on">正常</span>';
+      const keyCell = k.key
+        ? `<span class="mono copy" title="点击复制" onclick="copyText('${k.key}')">${esc(k.key_masked)}</span>`
+        : `<span class="mono" style="color:var(--dim)">${k.is_master ? '（.env 主密钥）' : esc(k.key_masked)}</span>`;
+      const actions = k.is_master
+        ? `<span style="color:var(--dim);font-size:12px">受保护</span>`
+        : `<button onclick="toggleKey(${k.id}, ${k.enabled ? 0 : 1})">${k.enabled ? '禁用' : '启用'}</button>
+           <button onclick="resetUsage(${k.id})">重置用量</button>
+           <button onclick="regen(${k.id})">重置 Key</button>
+           <button class="danger" onclick="delKey(${k.id})">删除</button>`;
+      return `<tr>
+        <td>${esc(k.name)}${k.note ? `<div style="color:var(--dim);font-size:12px">${esc(k.note)}</div>` : ''}</td>
+        <td>${keyCell}</td>
+        <td class="nowrap">${qt}</td><td class="nowrap">${limit}</td><td class="nowrap">${used}</td><td class="nowrap">${remain}</td>
+        <td class="nowrap">${state}</td><td class="nowrap" style="color:var(--dim)">${ts(k.last_used_at)}</td>
+        <td class="nowrap" style="color:var(--dim)">${exp}</td>
+        <td class="nowrap">${actions}</td></tr>`;
+    }).join('');
+    $('#keysTable').querySelector('tbody').innerHTML = rows ||
+      `<tr><td colspan="10" class="empty">还没有密钥</td></tr>`;
+  } catch (e) { msg('读取密钥失败：' + e.message, 'err'); }
+}
+
+function copyText(t) {
+  navigator.clipboard?.writeText(t).then(() => msg('已复制到剪贴板')).catch(() => {});
+}
+
+async function createKey() {
+  const body = {
+    name: $('#kName').value, quota_type: $('#kType').value,
+    quota_limit: parseFloat($('#kLimit').value || '0'),
+    expires_in_days: $('#kDays').value ? parseFloat($('#kDays').value) : null,
+    note: $('#kNote').value,
+  };
+  try {
+    const d = await api('/admin/api/keys', {method:'POST', body: JSON.stringify(body)});
+    $('#newKeyBox').innerHTML = `<div class="keybox">新密钥（只完整显示一次，请立即复制）<br/><b>${esc(d.key.key)}</b>
+      <div style="margin-top:8px"><button class="primary" onclick="copyText('${d.key.key}')">复制</button></div></div>`;
+    $('#kName').value = ''; $('#kLimit').value = ''; $('#kDays').value = ''; $('#kNote').value = '';
+    msg('密钥创建成功'); loadKeys();
+  } catch (e) { msg('创建失败：' + e.message, 'err'); }
+}
+async function toggleKey(id, enabled) {
+  try { await api('/admin/api/keys/' + id, {method:'PATCH', body: JSON.stringify({enabled: !!enabled})}); loadKeys(); }
+  catch (e) { msg(e.message, 'err'); }
+}
+async function resetUsage(id) {
+  if (!confirm('把该密钥的已用量清零？')) return;
+  try { await api('/admin/api/keys/' + id + '/reset_usage', {method:'POST', body: '{}'}); loadKeys(); msg('已清零'); }
+  catch (e) { msg(e.message, 'err'); }
+}
+async function regen(id) {
+  if (!confirm('重置后旧 Key 立即失效，确定？')) return;
+  try { const d = await api('/admin/api/keys/' + id + '/regenerate', {method:'POST', body:'{}'});
+    $('#newKeyBox').innerHTML = `<div class="keybox">新的 Key（已替换旧的）<br/><b>${esc(d.key.key)}</b>
+      <div style="margin-top:8px"><button class="primary" onclick="copyText('${d.key.key}')">复制</button></div></div>`;
+    loadKeys(); }
+  catch (e) { msg(e.message, 'err'); }
+}
+async function delKey(id) {
+  if (!confirm('删除后该 Key 立即失效，且不可恢复。确定删除？')) return;
+  try { await api('/admin/api/keys/' + id, {method:'DELETE'}); loadKeys(); msg('已删除'); }
+  catch (e) { msg(e.message, 'err'); }
+}
+
+async function loadUsage() {
+  const days = $('#usageDays').value || 7;
+  try {
+    const d = await api('/admin/api/usage?days=' + days);
+    const byDay = d.by_day;
+    $('#dayTable').innerHTML = '<thead><tr><th>日期</th><th>请求</th><th>失败</th><th>tokens</th><th>消耗积分</th></tr></thead><tbody>' +
+      (byDay.length ? byDay.map(r => `<tr><td>${r.day}</td><td>${r.requests}</td><td>${r.errors || 0}</td><td>${fmt(r.tokens,0)}</td><td>${fmt(r.credits,4)}</td></tr>`).join('')
+        : '<tr><td colspan="5" class="empty">暂无数据</td></tr>') + '</tbody>';
+    $('#keyUsageTable').innerHTML = '<thead><tr><th>密钥</th><th>请求</th><th>失败</th><th>tokens</th><th>消耗积分</th></tr></thead><tbody>' +
+      (d.by_key.length ? d.by_key.map(r => `<tr><td>${esc(r.key_name || ('#' + r.key_id))}</td><td>${r.requests}</td><td>${r.errors||0}</td><td>${fmt(r.tokens,0)}</td><td>${fmt(r.credits,4)}</td></tr>`).join('')
+        : '<tr><td colspan="5" class="empty">暂无数据</td></tr>') + '</tbody>';
+    $('#modelTable').innerHTML = '<thead><tr><th>模型</th><th>请求</th><th>tokens</th><th>消耗积分</th></tr></thead><tbody>' +
+      (d.by_model.length ? d.by_model.map(r => `<tr><td class="mono">${esc(r.model)}</td><td>${r.requests}</td><td>${fmt(r.tokens,0)}</td><td>${fmt(r.credits,4)}</td></tr>`).join('')
+        : '<tr><td colspan="4" class="empty">暂无数据</td></tr>') + '</tbody>';
+    drawChart(byDay);
+  } catch (e) { msg('读取用量失败：' + e.message, 'err'); }
+}
+
+function drawChart(rows) {
+  const svg = $('#chart');
+  const W = svg.clientWidth || 800, H = 150, pad = 26, bw = rows.length ? Math.max(8, (W - pad * 2) / rows.length - 6) : 10;
+  const max = Math.max(1, ...rows.map(r => r.requests));
+  let out = `<line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#2a3441"/>`;
+  rows.forEach((r, i) => {
+    const h = Math.max(1, (H - pad * 2) * (r.requests / max));
+    const x = pad + i * ((W - pad * 2) / Math.max(rows.length, 1));
+    out += `<rect x="${x.toFixed(1)}" y="${(H-pad-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="#4c9aff" opacity=".85"><title>${r.day}｜请求 ${r.requests}｜tokens ${r.tokens||0}｜积分 ${r.credits||0}</title></rect>`;
+    out += `<text x="${(x+bw/2).toFixed(1)}" y="${H-pad+14}" fill="#8b98a5" font-size="10" text-anchor="middle">${String(r.day).slice(5)}</text>`;
+    out += `<text x="${(x+bw/2).toFixed(1)}" y="${(H-pad-h-4).toFixed(1)}" fill="#e6edf3" font-size="10" text-anchor="middle">${r.requests}</text>`;
+  });
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = rows.length ? out : `<text x="50%" y="50%" fill="#8b98a5" font-size="12" text-anchor="middle">暂无数据</text>`;
+}
+
+async function loadLogs() {
+  try {
+    const d = await api('/admin/api/logs?limit=200');
+    $('#logTable').innerHTML = '<thead><tr><th>时间</th><th>密钥</th><th>接口</th><th>模型</th><th>状态</th><th>耗时</th><th>tokens</th><th>积分</th><th>IP</th></tr></thead><tbody>' +
+      (d.logs.length ? d.logs.map(l => {
+        const st = l.status >= 400 ? `<span class="pill off">${l.status}</span>` : `<span class="pill on">${l.status}</span>`;
+        return `<tr><td class="nowrap">${ts(l.ts)}</td><td>${esc(l.key_name)}</td><td class="mono">${esc(l.endpoint)}</td>
+        <td class="mono">${esc(l.model)}</td><td>${st}</td><td class="nowrap">${l.latency_ms} ms</td>
+        <td>${fmt(l.total_tokens,0)}</td><td>${fmt(l.credit,4)}</td><td class="mono" style="color:var(--dim)">${esc(l.ip)}</td></tr>`;
+      }).join('') : '<tr><td colspan="9" class="empty">暂无日志</td></tr>') + '</tbody>';
+  } catch (e) { msg('读取日志失败：' + e.message, 'err'); }
+}
+async function cleanupLogs() {
+  if (!confirm('删除 90 天前的请求日志？')) return;
+  try { const d = await api('/admin/api/logs/cleanup', {method:'POST', body: JSON.stringify({keep_days: 90})});
+    msg('已清理 ' + d.deleted + ' 条'); loadLogs(); }
+  catch (e) { msg(e.message, 'err'); }
+}
+
+$('#pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+window.addEventListener('resize', () => { if (OVERVIEW) loadUsage(); });
+
+if (TOKEN) {
+  api('/admin/api/me').then(() => { showApp(); boot(); }).catch(() => showLogin());
+} else { showLogin(); }
+</script>
+</body>
+</html>
