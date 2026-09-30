@@ -1,5 +1,7 @@
 # 03 · Docker 部署
 
+[English](en/03-docker.md) | 中文
+
 适合让局域网内其他设备、或公网设备访问。
 
 ## 方式一：docker compose（推荐本机/自有服务器）

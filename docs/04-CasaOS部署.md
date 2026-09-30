@@ -1,5 +1,7 @@
 # 04 · 部署到 CasaOS
 
+[English](en/04-casaos.md) | 中文
+
 [CasaOS](https://casaos.io/) 的「安装自定义应用」只接受现成镜像、**不支持 `build:`**。
 所以这里有两种做法：
 

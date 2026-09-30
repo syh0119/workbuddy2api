@@ -1,5 +1,7 @@
 # CasaOS 应用管理 API 笔记
 
+[English](en/casaos-api-notes.md) | 中文
+
 部署脚本 `casaos/deploy_casaos.py` 用的就是这套接口。适用于 CasaOS 0.4.x（实测 0.4.15）。
 
 **不需要 SSH，只要 Web UI 的账号密码。**

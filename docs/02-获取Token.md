@@ -1,5 +1,7 @@
 # 02 · 获取 Token
 
+[English](en/02-getting-token.md) | 中文
+
 服务只需要两样东西：**access token**（必须）和 **refresh token**（强烈建议）。
 
 | token | 作用 | 有效期（参考） |

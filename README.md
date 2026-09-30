@@ -1,9 +1,11 @@
 # WorkBuddy2API · 带控制面板的 OpenAI 兼容网关
 
+[![CI](https://github.com/syh0119/workbuddy2api/actions/workflows/ci.yml/badge.svg)](https://github.com/syh0119/workbuddy2api/actions/workflows/ci.yml)
+
 把 **WorkBuddy 桌面端内置的模型**（DeepSeek / Kimi / GLM / 混元 / MiniMax …）包装成标准 **OpenAI 兼容 API**，
 并附带一个**可视化控制台**：查看积分余额与消耗、创建分发密钥、给每个密钥单独设额度。
 
-> English: [README.en.md](README.en.md)｜本项目基于 [Tom6814/WorkBuddy2API](https://github.com/Tom6814/WorkBuddy2API) 二次开发
+> [English](README.en.md)｜本项目基于 [Tom6814/WorkBuddy2API](https://github.com/Tom6814/WorkBuddy2API) 二次开发
 
 ```
 ┌──────────────┐   OpenAI 协议   ┌─────────────────────┐   WorkBuddy 私有协议   ┌──────────────────┐
@@ -47,6 +49,11 @@
 - 针对 **CasaOS** 提供 API 自动化部署脚本（不用登 Web UI、不用 SSH）
 - 一键更新脚本：改完代码 `python update.py` 打包 + 推送 + 自动验证
 
+**质量保障**
+
+- `tools/ci_checks.py` —— 一个脚本覆盖语法、结构、敏感信息、Dockerfile 引用、YAML、文档链接
+- GitHub Actions 在 Python 3.10~3.13 上跑同一套检查，并真实启动服务、构建并冒烟测试 Docker 镜像
+
 ---
 
 ## 快速开始
@@ -85,6 +92,10 @@ python server.py
 | [docs/07-常见问题.md](docs/07-常见问题.md) | 报错对照、并发、流式、限速 |
 | [docs/使用指南.md](docs/使用指南.md) | 各个客户端怎么填（Cherry / Cursor / Dify / SDK…） |
 | [docs/CasaOS部署笔记.md](docs/CasaOS部署笔记.md) | CasaOS 应用管理 API 的逆向笔记 |
+| [SECURITY.md](SECURITY.md) | **放公网前必读** |
+| [CHANGELOG.md](CHANGELOG.md) | 本仓库相对上游改了什么 |
+
+🌐 **英文文档**（完整镜像）：[`docs/en/`](docs/en/) —— 从 [docs/en/01-quickstart.md](docs/en/01-quickstart.md) 开始。
 
 ---
 

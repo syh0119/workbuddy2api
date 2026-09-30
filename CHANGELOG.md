@@ -5,6 +5,27 @@
 
 ---
 
+## v2.1 — 持续集成与完整英文文档
+
+### 新增
+
+- `.github/workflows/ci.yml`：三个 job
+  - `checks`：在 Python 3.10 / 3.11 / 3.12 / 3.13 上跑 `tools/ci_checks.py`
+  - `smoke`：装依赖后做导入冒烟（能抓出漏拷模块这类问题），再真实启动服务并验证
+    `/health`、`/admin`、`/v1/models`
+  - `docker`：真正 `docker build` 并启动容器做健康检查 —— 补上了本机没有 Docker 无法验证的那一环
+- `tools/ci_checks.py`：本地与 CI 共用的自检脚本，覆盖
+  必需文件、敏感文件未提交、真实凭据样式、Python 语法、Dockerfile 的 COPY 源文件、
+  YAML 可解析、Markdown 相对链接、shell 语法，以及可选的导入冒烟
+- `docs/en/`：**完整英文文档**（9 篇），与中文文档一一对应，两边都有语言切换链接
+- README 增加 CI 徽章与英文文档入口
+
+### 改动
+
+- README.en.md 重写为完整镜像版（原先只是简版）
+
+---
+
 ## v2.0 — 控制面板与密钥分发
 
 ### 新增
