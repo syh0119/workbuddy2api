@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: 自检 · Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: 安装 pyyaml（YAML 检查用）
+        run: python -m pip install --quiet --disable-pip-version-check pyyaml
+
+      - name: 语法 / 结构 / 敏感信息 / 文档链接
+        run: python tools/ci_checks.py
+
+  smoke:
+    name: 导入冒烟 · 启动服务
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安装依赖
+        run: python -m pip install --quiet --disable-pip-version-check fastapi uvicorn pyyaml
+
+      - name: 导入冒烟（能抓出漏拷模块这类问题）
+        run: python tools/ci_checks.py --import-smoke
+
+      - name: 启动服务并验证端点
+        env:
+          CODEBUDDY_AUTH_TOKEN: dummy-token-for-ci
+          API_KEY: ci-test-key
+          ADMIN_PASSWORD: ci-test-password
+          PORT: "8123"
+          ADMIN_DB: /tmp/ci-admin.db
+        run: |
+          set -e
+          python server.py > /tmp/server.log 2>&1 &
+          echo $! > /tmp/server.pid
+          ok=""
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8123/health > /tmp/health.json; then ok=1; break; fi
+            sleep 1
+          done
+          if [ -z "$ok" ]; then echo "服务未能启动："; cat /tmp/server.log; exit 1; fi
+          echo "health: $(cat /tmp/health.json)"
+          echo "admin : $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8123/admin)"
+          echo "models: $(curl -s -o /dev/null -w '%{http_code}' -H 'Authorization: Bearer ci-test-key' http://127.0.0.1:8123/v1/models)"
+          curl -sf http://127.0.0.1:8123/admin > /dev/null
+          kill "$(cat /tmp/server.pid)" || true
+
+  docker:
+    name: Docker 构建与启动
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 构建镜像
+        run: docker build -t workbuddy2api:ci .
+
+      - name: 启动容器并健康检查
+        run: |
+          set -e
+          docker run -d --name wb-ci -p 8080:8080 \
+            -e CODEBUDDY_AUTH_TOKEN=dummy-token-for-ci \
+            -e API_KEY=ci-test-key \
+            -e ADMIN_PASSWORD=ci-test-password \
+            workbuddy2api:ci
+          ok=""
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8080/health; then ok=1; break; fi
+            sleep 2
+          done
+          echo "----- container logs -----"
+          docker logs wb-ci
+          if [ -z "$ok" ]; then echo "容器未能通过健康检查"; exit 1; fi
+          echo "admin: $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/admin)"
+
+      - name: 清理
+        if: always()
+        run: docker rm -f wb-ci || true
