@@ -7,8 +7,8 @@ import secrets
 import threading
 import time
 
-from fastapi import APIRouter, Body, Header, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi import APIRouter, Body, Header, HTTPException, Request, Response
+from fastapi.responses import FileResponse, JSONResponse
 
 import billing
 import store
@@ -69,7 +69,13 @@ def require_admin(authorization: str | None, x_admin_token: str | None) -> None:
 # ── 页面 ──────────────────────────────────────────────────────────────────
 @router.get("/")
 async def root():
-    return RedirectResponse("/admin")
+    """根路径刻意返回 404。
+
+    以前这里会 302 跳到 /admin，导致任何人（含扫描器）打开域名根路径都能看到
+    一个登录页 —— 容易被判定为"未备案网站"。现在根路径什么都不给，
+    面板请直接访问 /admin。
+    """
+    return Response(status_code=404)
 
 
 @router.get("/admin")

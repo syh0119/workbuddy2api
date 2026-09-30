@@ -1,0 +1,46 @@
+name: luckyfix3
+
+services:
+  luckyfix3:
+    image: alpine:3.20
+    container_name: luckyfix3
+    restart: "no"
+    working_dir: /appdata
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        cd /appdata
+        echo "[1] backup"
+        if [ -f lucky-backup-20261001-003317.tar.gz ]; then echo already-exists; else tar czf lucky-backup-20261001-003317.tar.gz lucky; fi
+        ls -la lucky-backup-20261001-003317.tar.gz
+        echo
+        echo "[2] lkcf BEFORE"
+        ls -la lucky | grep lkcf || echo none
+        echo
+        echo "[3] is base present?"
+        if [ -f lucky/lucky_base.lkcf ]; then echo BASE_PRESENT; else echo BASE_MISSING; fi
+        echo
+        echo "[4] removing lucky_base.lkcf"
+        rm -fv lucky/lucky_base.lkcf || echo rm-failed
+        echo
+        echo "[5] lkcf AFTER"
+        ls -la lucky | grep lkcf || echo none
+        echo
+        echo "[6] is base present now?"
+        if [ -f lucky/lucky_base.lkcf ]; then echo STILL_PRESENT; else echo GONE; fi
+        echo
+        echo "LUCKYFIX_DONE"
+        sleep 900
+    volumes:
+      - /DATA/AppData:/appdata
+
+x-casaos:
+  main: luckyfix3
+  port_map: "9"
+  scheme: http
+  is_uncontrolled: true
+  title:
+    en_us: luckyfix3
+    zh_cn: luckyfix3

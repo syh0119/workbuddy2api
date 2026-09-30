@@ -1,0 +1,21 @@
+name: apiproxy
+
+services:
+  apiproxy:
+    image: caddy:2.8-alpine
+    container_name: apiproxy
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /DATA/AppData/apiproxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /DATA/AppData/apiproxy/data:/data
+      - /DATA/AppData/apiproxy/config:/config
+
+x-casaos:
+  main: apiproxy
+  port_map: "9"
+  scheme: http
+  is_uncontrolled: true
+  title:
+    en_us: apiproxy
+    zh_cn: apiproxy
